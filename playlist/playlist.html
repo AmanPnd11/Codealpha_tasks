@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pro Music Player</title>
+ <style>
+  body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+:root {
+  --bg: #fff;
+  --text: #000;
+  --primary: #1db954;
+}
+
+.light-mode {
+  --bg: #fff;
+  --text: #000;
+}
+
+.dark-mode {
+  --bg: #121212;
+  --text: #fff;
+}
+
+.player-container {
+  width: 350px;
+  background: var(--bg);
+  border-radius: 20px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.2);
+  padding: 25px;
+  text-align: center;
+  transition: 0.3s ease;
+}
+
+.album-cover {
+  width: 100%;
+  border-radius: 15px;
+  margin: 20px 0;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s;
+}
+
+.album-cover:hover {
+  transform: scale(1.05);
+}
+
+.progress-area {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+}
+
+#progress-bar {
+  width: 100%;
+  accent-color: var(--primary);
+}
+
+.controls button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  margin: 10px 5px;
+  cursor: pointer;
+  color: var(--text);
+  transition: 0.2s;
+}
+
+.controls button:hover {
+  color: var(--primary);
+}
+
+.volume-area {
+  margin-top: 10px;
+}
+
+#volume {
+  width: 100%;
+  accent-color: var(--primary);
+}
+
+.playlist {
+  list-style: none;
+  padding: 0;
+  margin-top: 20px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.playlist li {
+  padding: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.playlist li:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+ </style>
+</head>
+
+<body>
+  <div class="player-container light-mode">
+    <div class="player-header">
+      <h2 id="song-title">Song Title</h2>
+      <p id="song-artist">Artist</p>
+      <button id="toggle-mode">🌓</button>
+    </div>
+
+    <img src="assets/cover1.jpg" id="cover" class="album-cover" alt="Album Art">
+
+    <div class="progress-area">
+      <span id="current-time">0:00</span>
+      <input type="range" id="progress-bar" value="0">
+      <span id="duration">0:00</span>
+    </div>
+
+    <div class="controls">
+      <button id="shuffle">🔀</button>
+      <button id="prev">⏮</button>
+      <button id="play">▶️</button>
+      <button id="next">⏭</button>
+      <button id="repeat">🔁</button>
+    </div>
+
+    <div class="volume-area">
+      <input type="range" id="volume" min="0" max="1" step="0.01">
+    </div>
+
+    <ul id="playlist" class="playlist">
+      <!-- Songs will be loaded dynamically -->
+    </ul>
+  </div>
+
+  <audio id="audio"></audio>
+  <script> 
+    const songs = [
+  {
+    title: "On & On",
+    artist: "Cartoon ft. Daniel Levi",
+    src: "songs/song1.mp3",
+    cover: "assets/cover1.jpg"
+  },
+  {
+    title: "Sky High",
+    artist: "Elektronomia",
+    src: "songs/song2.mp3",
+    cover: "assets/cover2.jpg"
+  },
+  {
+    title: "Spectre",
+    artist: "Alan Walker",
+    src: "songs/song3.mp3",
+    cover: "assets/cover3.jpg"
+  }
+];
+
+let currentSong = 0;
+let isShuffle = false;
+let isRepeat = false;
+
+const audio = document.getElementById('audio');
+const title = document.getElementById('song-title');
+const artist = document.getElementById('song-artist');
+const cover = document.getElementById('cover');
+const progressBar = document.getElementById('progress-bar');
+const currentTimeEl = document.getElementById('current-time');
+const durationEl = document.getElementById('duration');
+const volume = document.getElementById('volume');
+const playBtn = document.getElementById('play');
+const nextBtn = document.getElementById('next');
+const prevBtn = document.getElementById('prev');
+const repeatBtn = document.getElementById('repeat');
+const shuffleBtn = document.getElementById('shuffle');
+const modeToggle = document.getElementById('toggle-mode');
+const playlistEl = document.getElementById('playlist');
+
+function loadSong(index) {
+  const song = songs[index];
+  title.textContent = song.title;
+  artist.textContent = song.artist;
+  cover.src = song.cover;
+  audio.src = song.src;
+}
+
+function playSong() {
+  audio.play();
+  playBtn.textContent = '⏸';
+}
+
+function pauseSong() {
+  audio.pause();
+  playBtn.textContent = '▶️';
+}
+
+playBtn.addEventListener('click', () => {
+  audio.paused ? playSong() : pauseSong();
+});
+
+nextBtn.addEventListener('click', () => {
+  nextSong();
+});
+
+prevBtn.addEventListener('click', () => {
+  currentSong = (currentSong - 1 + songs.length) % songs.length;
+  loadSong(currentSong);
+  playSong();
+});
+
+function nextSong() {
+  currentSong = isShuffle ? Math.floor(Math.random() * songs.length) : (currentSong + 1) % songs.length;
+  loadSong(currentSong);
+  playSong();
+}
+
+audio.addEventListener('ended', () => {
+  isRepeat ? playSong() : nextSong();
+});
+
+audio.addEventListener('timeupdate', () => {
+  const progress = (audio.currentTime / audio.duration) * 100;
+  progressBar.value = progress || 0;
+
+  currentTimeEl.textContent = formatTime(audio.currentTime);
+  durationEl.textContent = formatTime(audio.duration);
+});
+
+progressBar.addEventListener('input', () => {
+  audio.currentTime = (progressBar.value / 100) * audio.duration;
+});
+
+volume.addEventListener('input', () => {
+  audio.volume = volume.value;
+});
+
+repeatBtn.addEventListener('click', () => {
+  isRepeat = !isRepeat;
+  repeatBtn.style.color = isRepeat ? '#1db954' : 'var(--text)';
+});
+
+shuffleBtn.addEventListener('click', () => {
+  isShuffle = !isShuffle;
+  shuffleBtn.style.color = isShuffle ? '#1db954' : 'var(--text)';
+});
+
+modeToggle.addEventListener('click', () => {
+  document.querySelector('.player-container').classList.toggle('dark-mode');
+  document.querySelector('.player-container').classList.toggle('light-mode');
+});
+
+function formatTime(sec) {
+  const mins = Math.floor(sec / 60);
+  const secs = Math.floor(sec % 60);
+  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+}
+
+// Load playlist
+songs.forEach((song, index) => {
+  const li = document.createElement('li');
+  li.textContent = `${song.title} - ${song.artist}`;
+  li.addEventListener('click', () => {
+    currentSong = index;
+    loadSong(index);
+    playSong();
+  });
+  playlistEl.appendChild(li);
+});
+
+// Initial
+loadSong(currentSong);
+volume.value = 0.5;
+audio.volume = 0.5;
+
+  </script>
+</body>
+</html>
