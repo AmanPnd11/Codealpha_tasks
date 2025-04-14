@@ -1,0 +1,275 @@
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Gallery</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #fdfcfb, #e2d1c3);
+      margin: 0;
+      padding: 0;
+    }
+    .gallery-container {
+      max-width: 1000px;
+      margin: 50px auto;
+      padding: 20px;
+      background: linear-gradient(135deg, #ffffff, #f1f1f1);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+      border-radius: 15px;
+    }
+    .gallery-container h1 {
+      text-align: center;
+      color: #673ab7;
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+    }
+    .upload-container {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .upload-container input {
+      padding: 12px;
+      border-radius: 8px;
+      border: 2px solid #7c4dff;
+      background-color: #f3e5f5;
+      font-size: 1rem;
+      color: #4a148c;
+    }
+    .drag-drop-area {
+      border: 3px dashed #7b1fa2;
+      border-radius: 15px;
+      padding: 30px;
+      text-align: center;
+      background: #fce4ec;
+      color: #6a1b9a;
+      transition: background 0.3s;
+    }
+    .drag-drop-area.dragover {
+      border-color: #ff4081;
+      background-color: #f8bbd0;
+    }
+    .sort-controls {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .sort-controls select {
+      padding: 10px;
+      border-radius: 8px;
+      border: 2px solid #ab47bc;
+      background-color: #f3e5f5;
+      color: #4a148c;
+      font-size: 1rem;
+    }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+    }
+    .image-wrapper {
+      position: relative;
+      background: linear-gradient(45deg, #ffe0b2, #ffccbc);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .image-wrapper img {
+      width: 100%;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    .image-wrapper img:hover {
+      transform: scale(1.05);
+      opacity: 0.9;
+    }
+    .delete-btn, .download-btn {
+      position: absolute;
+      top: 8px;
+      background: rgba(255, 87, 34, 0.9);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    .delete-btn:hover, .download-btn:hover {
+      background: #e64a19;
+    }
+    .delete-btn { right: 8px; }
+    .download-btn { left: 8px; }
+    .lightbox {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.9);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .lightbox img {
+      max-width: 90%;
+      max-height: 80vh;
+      transition: transform 0.3s ease;
+      border: 5px solid #fff;
+      border-radius: 12px;
+    }
+    .lightbox-controls {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+    }
+    .lightbox-controls button {
+      background: #ffccbc;
+      color: #6a1b9a;
+      padding: 8px 14px;
+      margin-left: 10px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+      font-weight: bold;
+    }
+    .lightbox-controls button:hover {
+      background: #ffab91;
+    }
+  </style>
+</head>
+<body>
+  <div class="gallery-container">
+    <h1>Image Gallery</h1>
+
+    <div class="upload-container">
+      <input type="file" id="imageUpload" multiple accept="image/*">
+    </div>
+
+    <div class="drag-drop-area" id="dropArea">
+      Drag & Drop Images Here
+    </div>
+
+    <div class="sort-controls">
+      <label for="sortSelect">Sort by:</label>
+      <select id="sortSelect">
+        <option value="name">Name</option>
+        <option value="time">Upload Time</option>
+      </select>
+    </div>
+
+    <div class="gallery-grid" id="gallery">
+      <div class="image-wrapper">
+        <img src="https://picsum.photos/id/1015/400/300" alt="Sample Image 1">
+        <button class="delete-btn" onclick="this.parentElement.remove()">×</button>
+        <button class="download-btn" onclick="downloadImage(this)">↓</button>
+      </div>
+      <div class="image-wrapper">
+        <img src="https://picsum.photos/id/1025/400/300" alt="Sample Image 2">
+        <button class="delete-btn" onclick="this.parentElement.remove()">×</button>
+        <button class="download-btn" onclick="downloadImage(this)">↓</button>
+      </div>
+      <div class="image-wrapper">
+        <img src="https://picsum.photos/id/1042/400/300" alt="Sample Image 3">
+        <button class="delete-btn" onclick="this.parentElement.remove()">×</button>
+        <button class="download-btn" onclick="downloadImage(this)">↓</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="lightbox" id="lightbox">
+    <img id="lightboxImg" src="" alt="Large View">
+    <div class="lightbox-controls">
+      <button onclick="zoomImage(1.2)">Zoom In</button>
+      <button onclick="zoomImage(0.8)">Zoom Out</button>
+      <button onclick="rotateImage()">Rotate</button>
+      <button onclick="closeLightbox()">Close</button>
+    </div>
+  </div>
+
+  <script>
+    const dropArea = document.getElementById('dropArea');
+    const imageUpload = document.getElementById('imageUpload');
+    const gallery = document.getElementById('gallery');
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightboxImg');
+    let currentRotation = 0;
+
+    function showLightbox(src) {
+      lightboxImg.src = src;
+      lightbox.style.display = 'flex';
+    }
+    function closeLightbox() {
+      lightbox.style.display = 'none';
+      lightboxImg.style.transform = 'rotate(0deg) scale(1)';
+      currentRotation = 0;
+    }
+    function zoomImage(scale) {
+      lightboxImg.style.transform += ` scale(${scale})`;
+    }
+    function rotateImage() {
+      currentRotation += 90;
+      lightboxImg.style.transform = `rotate(${currentRotation}deg)`;
+    }
+    function downloadImage(btn) {
+      const img = btn.parentElement.querySelector('img');
+      const a = document.createElement('a');
+      a.href = img.src;
+      a.download = 'image.jpg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    imageUpload.addEventListener('change', (e) => handleFiles(e.target.files));
+    dropArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropArea.classList.add('dragover');
+    });
+    dropArea.addEventListener('dragleave', () => dropArea.classList.remove('dragover'));
+    dropArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropArea.classList.remove('dragover');
+      handleFiles(e.dataTransfer.files);
+    });
+
+    function handleFiles(files) {
+      [...files].forEach(file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'image-wrapper';
+          wrapper.innerHTML = `
+            <img src="${e.target.result}" alt="Uploaded Image" onclick="showLightbox(this.src)">
+            <button class="delete-btn" onclick="this.parentElement.remove()">×</button>
+            <button class="download-btn" onclick="downloadImage(this)">↓</button>
+          `;
+          gallery.appendChild(wrapper);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    document.querySelectorAll('.image-wrapper img').forEach(img => {
+      img.addEventListener('click', () => showLightbox(img.src));
+    });
+
+    document.getElementById('sortSelect').addEventListener('change', () => {
+      const sortBy = document.getElementById('sortSelect').value;
+      let items = Array.from(gallery.children);
+      items.sort((a, b) => {
+        if (sortBy === 'name') {
+          return a.querySelector('img').alt.localeCompare(b.querySelector('img').alt);
+        }
+        return 0;
+      });
+      gallery.innerHTML = '';
+      items.forEach(item => gallery.appendChild(item));
+    });
+  </script>
+</body>
+</html>
